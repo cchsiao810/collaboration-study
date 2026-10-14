@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>數位協作情境測試</title>
+
+  <script src="https://unpkg.com/jspsych@8.2.1"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/extension-pipe@0.2.0"></script>
+
+  <link rel="stylesheet"
+        href="https://unpkg.com/jspsych@8.2.1/css/jspsych.css">
+
+  <style>
+    body {
+      margin: 0;
+      background: #f5f6f8;
+      color: #243042;
+      font-family: system-ui, "Noto Sans TC", sans-serif;
+    }
+    .jspsych-content {
+      max-width: 760px;
+      width: 100%;
+      padding: 24px;
+      box-sizing: border-box;
+      text-align: left;
+      line-height: 1.8;
+    }
+    .card {
+      background: white;
+      border: 1px solid #e1e5eb;
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    h1 { font-size: 26px; line-height: 1.4; }
+    h2 { font-size: 20px; }
+    .muted { color: #627085; font-size: 15px; }
+    .message {
+      background: #f0f4fa;
+      border-radius: 12px;
+      padding: 18px;
+      margin: 16px 0;
+    }
+    .reply {
+      background: #edf7f2;
+    }
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 150px;
+      padding: 14px;
+      border: 1px solid #b9c3d1;
+      border-radius: 10px;
+      font: inherit;
+      resize: vertical;
+    }
+    .jspsych-btn {
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-size: 16px;
+      margin-top: 12px;
+    }
+    @media (max-width: 600px) {
+      .jspsych-content { padding: 16px; }
+      .card { padding: 20px; }
+    }
+  </style>
+</head>
+
+<body>
+  <noscript>請啟用 JavaScript，才能進行此測試。</noscript>
+  <div id="experiment">正在載入測試……</div>
+
+  <script>
+    // 每次開啟網頁，建立一個新的測試編號。
+    const subject_id = crypto.randomUUID();
+    const filename = `${subject_id}.csv`;
+
+    const jsPsych = initJsPsych({
+      display_element: "experiment",
+
+      // 沿用你從 DataPipe dashboard 提供的串接設定。
+      extensions: [{
+        type: jsPsychExtensionPipe,
+        params: {
+          experiment_id: "wgt5prIcjVof",
+          filename: () => filename
+        }
+      }],
+
+      on_finish: () => {
+        const container = document.getElementById("experiment");
+
+        container.innerHTML = `
+          <div class="jspsych-content">
+            <div class="card">
+              <h1>單題測試完成</h1>
+              <p>請到 DataPipe dashboard 與連接的
+                 Google Drive 資料夾確認是否收到資料。</p>
+              <p class="muted">
+                這個畫面表示作答流程完成，
+                不代表已確認雲端保存成功。
+              </p>
+              <p>本次資料檔名：</p>
+              <code id="filename"></code>
+              <p>
+                <button class="jspsych-btn" id="download">
+                  下載 CSV 備份
+                </button>
+              </p>
+              <p class="muted">
+                這是平台測試資料，不納入正式研究分析。
+              </p>
+            </div>
+          </div>
+        `;
+
+        document.getElementById("filename").textContent = filename;
+        document.getElementById("download").onclick = () => {
+          jsPsych.data.get().localSave("csv", filename);
+        };
+      }
+    });
+
+    jsPsych.data.addProperties({
+      subject_id: subject_id,
+      study_version: "s06-platform-test-v1",
+      data_category: "platform_test",
+      started_at: new Date().toISOString()
+    });
+
+    const introduction = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `
+        <div class="card">
+          <p class="muted">平台測試版｜一個情境</p>
+          <h1>數位協作情境測試</h1>
+          <p>
+            接下來你會閱讀一段協作情境，
+            並寫下你實際會傳送的回覆。
+          </p>
+          <p>
+            本次只測試網頁與資料保存功能。
+            請使用測試回答，不要填入姓名、
+            聯絡方式或其他私人資訊。
+          </p>
+          <p>
+            點選「開始測試」後，
+            作答資料會透過 DataPipe 傳送至研究者的儲存空間。
+          </p>
+        </div>
+      `,
+      choices: ["開始測試"],
+      data: { stage: "introduction" }
+    };
+
+    const scenario = {
+      type: jsPsychSurveyHtmlForm,
+      preamble: `
+        <div class="card">
+          <p class="muted">協作對象：Nova｜AI協作者</p>
+          <h1>整理分享會介紹</h1>
+
+          <p>
+            你正在整理一場分享會的介紹，
+            已經有以下三個重點：
+          </p>
+
+          <ul>
+            <li>工作流程：用數位工具減少重複作業。</li>
+            <li>團隊合作：讓成員更容易分享資訊與協調進度。</li>
+            <li>未來技能：學習判斷工具的限制，並檢查產出。</li>
+          </ul>
+
+          <p>你請 AI 協作者 Nova 潤飾文字，並交代：</p>
+
+          <div class="message">
+            <strong>你的要求</strong><br>
+            「請保留三個條列，每點一句話，
+            不要合併成段落。」
+          </div>
+
+          <div class="message reply">
+            <strong>Nova 回覆</strong><br>
+            「這場分享會將介紹如何運用數位工具
+            減少重複作業，讓團隊更容易分享資訊
+            與協調進度，並探討如何判斷工具的限制
+            與檢查產出。」
+          </div>
+        </div>
+      `,
+      html: `
+        <div class="card">
+          <label for="reply">
+            <strong>你會如何回覆 Nova？</strong><br>
+            請寫下你實際會傳送的訊息。
+          </label>
+          <p>
+            <textarea
+              id="reply"
+              name="reply_text"
+              maxlength="5000"
+              required
+              placeholder="在這裡輸入你的回覆……"
+            ></textarea>
+          </p>
+        </div>
+      `,
+      button_label: "送出回答",
+      data: {
+        stage: "scenario_response",
+        scenario_id: "S06",
+        target_type: "AI",
+        collaborator_name: "Nova"
+      },
+      on_finish: (data) => {
+        data.reply_text = data.response.reply_text;
+        data.submitted_at = new Date().toISOString();
+      }
+    };
+
+    jsPsych.run([introduction, scenario]);
+  </script>
+</body>
+</html>
