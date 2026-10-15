@@ -130,215 +130,48 @@ button:disabled { opacity: .45; cursor: default; }
   .thread { padding: 14px; }
   .composer { padding: 12px; }
 }
-</style>
+fieldset {border:0;padding:12px 0;border-bottom:1px solid #eee;} legend{font-weight:600;} .scale{display:flex;gap:14px;flex-wrap:wrap;} .scale label{display:flex;flex-direction:column;align-items:center;} input[type=radio]{width:18px;height:18px;} .error{color:#a02727;} .progress{font-size:12px;color:#697587;margin-left:auto;} [hidden]{display:none!important;}</style>
 </head>
 
-<body>
-<div id="experiment">正在載入……</div>
+<body><div id="experiment">正在載入……</div><script>
+const SCENARIOS=[{"id": "S01", "family": "Request", "title": "縮短活動介紹", "context": "你正在準備一段活動介紹。協作者已完成約300字的版本；你現在希望縮短到約150字。", "prior": "", "reply": "活動介紹已經完成了，目前大約300字。", "number": 1, "scenario_version": "chat-adapted-v1"}, {"id": "S02", "family": "Request", "title": "挑選簡報標題", "context": "你正在替簡報挑選標題。協作者提供的三個選項，你目前都不太滿意，想再看三個不同的選項。", "prior": "", "reply": "目前想到的三個標題是：\nA. 數位工作的下一步\nB. 工作模式的新時代\nC. 未來職場趨勢", "number": 2, "scenario_version": "chat-adapted-v1"}, {"id": "S03", "family": "Request", "title": "調整通知語氣", "context": "你正在準備一封活動通知。協作者已完成初稿，但你希望整體語氣再正式一些。", "prior": "", "reply": "初稿完成了：\n「嗨大家！提醒一下，我們下週五有一場分享會，記得來參加喔！」", "number": 3, "scenario_version": "chat-adapted-v1"}, {"id": "S04", "family": "Correction", "title": "簡報標題", "context": "你正在準備簡報，標題應為「2027 Market Outlook」。", "prior": "請把標題改成「2027 Market Outlook」。", "reply": "完成了，我已經把標題改成「2026 Market Outlook」。", "number": 4, "scenario_version": "chat-adapted-v1"}, {"id": "S05", "family": "Correction", "title": "整理活動資訊", "context": "你請協作者整理活動資訊，內容需要包含日期、地點及報名連結。", "prior": "請整理活動資訊，包含日期、地點、報名連結。", "reply": "整理好了：\n日期：11月12日\n地點：台北", "number": 5, "scenario_version": "chat-adapted-v1"}, {"id": "S06", "family": "Correction", "title": "整理分享會介紹", "context": "你已有三個重點，請協作者協助潤飾：\n• 工作流程：用數位工具減少重複作業。\n• 團隊合作：讓成員更容易分享資訊與協調進度。\n• 未來技能：學習判斷工具的限制，並檢查產出。", "prior": "請保留三個條列，每點一句話，不要合併成段落。", "reply": "這場分享會將介紹如何運用數位工具減少重複作業，讓團隊更容易分享資訊與協調進度，並探討如何判斷工具的限制與檢查產出。", "number": 6, "scenario_version": "chat-adapted-v1"}, {"id": "S07", "family": "Disagreement", "title": "簡報開場順序", "context": "你正在和協作者討論簡報開場方式。你已決定一開始先講最重要的研究結果，再補充研究方法。", "prior": "", "reply": "我覺得一開始先詳細介紹研究方法會比較好。", "number": 7, "scenario_version": "chat-adapted-v1"}, {"id": "S08", "family": "Disagreement", "title": "文件修改範圍", "context": "你正在修改一份文件。你對目前的開頭已經很滿意，不打算再改，現在只想繼續處理後面的部分。", "prior": "", "reply": "我覺得我們也可以把開頭整段重寫一次。", "number": 8, "scenario_version": "chat-adapted-v1"}, {"id": "S09", "family": "Disagreement", "title": "選擇版面方案", "context": "你已經看過版面方案A和B，並決定使用A。", "prior": "", "reply": "我會比較推薦方案B。", "number": 9, "scenario_version": "chat-adapted-v1"}, {"id": "S10", "family": "Failure", "title": "修改文字用語", "context": "你之前已請協作者把內容改成繁體中文。第一次修改仍使用簡體中文，你也已經提醒過一次。", "prior": "請再修改一次，我需要的是繁體中文。", "reply": "我重新修改好了：\n「这次活动将介绍人工智能在日常工作中的应用，并讨论未来的发展趋势。」", "number": 10, "scenario_version": "chat-adapted-v1"}, {"id": "S11", "family": "Failure", "title": "保留文件開頭", "context": "你請協作者修改文件，已特別說明保留開頭原文，只修改結論。", "prior": "請保留開頭原文，只修改結論。", "reply": "修改完成了。我把開頭和結論都重新整理過了。", "number": 11, "scenario_version": "chat-adapted-v1"}, {"id": "S12", "family": "Failure", "title": "整理簡報重點", "context": "你需要把內容直接貼進簡報，已明確要求整理成剛好五個條列重點。", "prior": "請整理成剛好五個條列重點。", "reply": "整理好了：\n這次研究主要關注使用者如何採用新的數位工具，以及這些工具如何影響工作流程。研究也討論團隊合作、學習成本、工作效率，以及未來導入新系統時可能遇到的挑戰。", "number": 12, "scenario_version": "chat-adapted-v1"}];
 
-<script>
-const subject_id = crypto.randomUUID();
-const filename = `${subject_id}.csv`;
-
-const jsPsych = initJsPsych({
-  display_element: "experiment",
-  extensions: [{
-    type: jsPsychExtensionPipe,
-    params: {
-      experiment_id: "wgt5prIcjVof",
-      filename: () => filename
-    }
-  }],
-  on_finish: () => {
-    document.getElementById("experiment").innerHTML = `
-      <div class="jspsych-content">
-        <div class="card">
-          <h1>聊天測試完成</h1>
-          <p>請到 Google Drive 確認本次回答是否保存。</p>
-          <p class="muted">
-            此畫面表示作答完成，不代表已確認雲端保存成功。
-          </p>
-          <p id="file"></p>
-          <button id="backup">下載 CSV 備份</button>
-        </div>
-      </div>`;
-    document.getElementById("file").textContent = filename;
-    document.getElementById("backup").onclick = () =>
-      jsPsych.data.get().localSave("csv", filename);
-  }
-});
-
-jsPsych.data.addProperties({
-  subject_id,
-  study_version: "s06-chat-test-v1",
-  data_category: "platform_test",
-  started_at: new Date().toISOString()
-});
-
-const intro = {
-  type: jsPsychHtmlButtonResponse,
-  stimulus: `
-    <div class="card">
-      <p class="muted">聊天介面測試｜一個情境</p>
-      <h1>數位協作</h1>
-      <p>你會看到一段既有聊天紀錄。
-         閱讀後，請在訊息框寫下你會傳送的回覆。</p>
-      <p>本次協作者訊息為預先設定，
-         不會根據你的回答即時生成新訊息。</p>
-      <p>這是平台測試，回答會保存至研究者的儲存空間。
-         請勿輸入私人資訊。</p>
-    </div>`,
-  choices: ["進入對話"],
-  data: { stage: "introduction" }
-};
-
-const chatTrial = {
-  type: jsPsychHtmlButtonResponse,
-  choices: [],
-  stimulus: `
-    <section class="chat">
-      <header class="header">
-        <div class="avatar">N</div>
-        <div>
-          <strong>Nova</strong>
-          <div class="muted">AI 協作者</div>
-        </div>
-      </header>
-
-      <div class="thread" id="thread">
-        <div class="context">
-          <strong>目前任務：整理分享會介紹</strong>
-          <p>你已有三個重點，請 Nova 協助潤飾：</p>
-          <ul>
-            <li>工作流程：用數位工具減少重複作業。</li>
-            <li>團隊合作：讓成員更容易分享資訊與協調進度。</li>
-            <li>未來技能：學習判斷工具的限制，並檢查產出。</li>
-          </ul>
-        </div>
-
-        <div class="row you">
-          <div class="message">
-            <div class="label">你・先前的訊息</div>
-            <div class="bubble">請保留三個條列，每點一句話，不要合併成段落。</div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="message">
-            <div class="label">Nova</div>
-            <div class="bubble" id="nova" aria-live="polite">正在輸入……</div>
-          </div>
-        </div>
-
-        <div id="sent-message"></div>
-      </div>
-
-      <div class="composer">
-        <form id="message-form">
-          <div class="input-row">
-            <textarea id="reply" maxlength="5000"
-              placeholder="等待協作者回覆……"
-              aria-label="輸入訊息" disabled></textarea>
-            <button id="send" type="submit" disabled>傳送</button>
-          </div>
-        </form>
-        <div class="hint" id="hint">
-          Enter 換行；按「傳送」送出訊息。
-        </div>
-        <button id="complete" hidden>完成測試</button>
-      </div>
-    </section>`,
-  data: {
-    stage: "scenario_response",
-    scenario_id: "S06",
-    scenario_version: "s06-revised-v1",
-    target_type: "AI",
-    collaborator_name: "Nova",
-    interface_type: "chat",
-    typing_delay_ms: 1000
-  },
-  on_load: () => {
-    const trialStart = performance.now();
-    const thread = document.getElementById("thread");
-    const input = document.getElementById("reply");
-    const send = document.getElementById("send");
-    const complete = document.getElementById("complete");
-
-    let replyShownAt;
-    let firstInputAt = null;
-    let result = null;
-
-    // 固定延遲；正式 A/B 版兩種身分將使用相同設定。
-    jsPsych.pluginAPI.setTimeout(() => {
-      document.getElementById("nova").textContent =
-        "這場分享會將介紹如何運用數位工具減少重複作業，" +
-        "讓團隊更容易分享資訊與協調進度，並探討如何判斷工具的限制與檢查產出。";
-      replyShownAt = performance.now();
-      input.disabled = false;
-      input.placeholder = "輸入訊息……";
-      thread.scrollTop = thread.scrollHeight;
-    }, 1000);
-
-    input.addEventListener("input", () => {
-      if (firstInputAt === null && input.value.length > 0) {
-        firstInputAt = performance.now();
-      }
-      send.disabled = input.value.trim().length === 0;
-    });
-
-    document.getElementById("message-form")
-      .addEventListener("submit", (event) => {
-        event.preventDefault();
-        const text = input.value.trim();
-        if (!text || result || replyShownAt === undefined) return;
-
-        const sentAt = performance.now();
-        result = {
-          reply_text: text,
-          rt: Math.round(sentAt - trialStart),
-          response_rt_ms: Math.round(sentAt - replyShownAt),
-          first_input_latency_ms: firstInputAt === null
-            ? null : Math.round(firstInputAt - replyShownAt),
-          composition_ms: firstInputAt === null
-            ? null : Math.round(sentAt - firstInputAt),
-          submitted_at: new Date().toISOString()
-        };
-
-        // 使用 textContent，回答只當文字顯示。
-        const row = document.createElement("div");
-        row.className = "row you";
-        const message = document.createElement("div");
-        message.className = "message";
-        const label = document.createElement("div");
-        label.className = "label";
-        label.textContent = "你";
-        const bubble = document.createElement("div");
-        bubble.className = "bubble";
-        bubble.textContent = text;
-        message.append(label, bubble);
-        row.append(message);
-        document.getElementById("sent-message").append(row);
-
-        input.disabled = true;
-        send.disabled = true;
-        document.getElementById("hint").textContent =
-          "訊息已送出。請按「完成測試」繼續。";
-        complete.hidden = false;
-        thread.scrollTop = thread.scrollHeight;
-      });
-
-    complete.addEventListener("click", () => {
-      if (!result) return;
-      complete.disabled = true;
-      jsPsych.finishTrial({
-        ...result,
-        trial_duration_ms: Math.round(performance.now() - trialStart)
-      });
-    });
-  }
-};
-
-jsPsych.run([intro, chatTrial]);
-</script>
-</body>
-</html>
+const CONFIG={experimentId:"wgt5prIcjVof",studyVersion:"chat12-pilot-v1",typingDelay:1000};
+const params=new URLSearchParams(location.search);
+const forced=params.get('version');
+const version=['A','B'].includes(forced)?forced:(Math.random()<.5?'A':'B');
+const subject_id=crypto.randomUUID();
+const filename=`${subject_id}.csv`;
+const localOnly=params.get('local')==='1';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const jsPsych=initJsPsych({display_element:'experiment',extensions:localOnly?[]:[{type:jsPsychExtensionPipe,params:{experiment_id:CONFIG.experimentId,filename:()=>filename}}],on_finish:()=>{
+ document.getElementById('experiment').innerHTML=`<div class="jspsych-content"><div class="card"><h1>測試完成，謝謝你！</h1><p>本次是情境與操作預試。所有協作者訊息皆為預先設定，並非即時連線真人或AI。研究會比較不同協作者身分下的溝通方式；目前資料用來檢查情境與流程，不直接推論正式研究結果。</p><p>${localOnly?'本機檢查模式，未傳送資料。':'請研究者到Drive核對資料；此畫面不代表雲端保存已確認。'}</p><p id="file"></p><button id="backup">下載原始CSV備份</button></div></div>`;
+ document.getElementById('file').textContent=filename;
+ document.getElementById('backup').onclick=()=>jsPsych.data.get().localSave('csv',filename);
+}});
+jsPsych.data.addProperties({subject_id,version,assignment_method:['A','B'].includes(forced)?'explicit_link':'random_50_50',study_version:CONFIG.studyVersion,data_category:'chat_pilot',started_at:new Date().toISOString(),local_only:localOnly});
+function page(title,text,button='繼續',stage='instructions') {return {type:jsPsychHtmlButtonResponse,stimulus:`<div class="card"><h1>${title}</h1>${text}</div>`,choices:[button],data:{stage}};}
+function form(title,html,stage,extra={},onDone=null){return {type:jsPsychHtmlButtonResponse,choices:[],stimulus:`<div class="card"><h1>${title}</h1><form id="form">${html}<button type="submit">繼續</button></form></div>`,data:{stage,...extra},on_load:()=>{const t=performance.now();document.getElementById('form').onsubmit=e=>{e.preventDefault();const response=Object.fromEntries(new FormData(e.target));if(onDone)onDone(response);jsPsych.finishTrial({response,...response,rt:Math.round(performance.now()-t)});};}};}
+function scale(key,label,low,high){return `<fieldset><legend>${label}</legend><p class="muted">1＝${low}；7＝${high}</p><div class="scale">${[1,2,3,4,5,6,7].map(n=>`<label>${n}<input type="radio" name="${key}" value="${n}" required></label>`).join('')}</div></fieldset>`;}
+function target(s){const human=version==='A'?s.number%2===1:s.number%2===0;return {target_type:human?'Human':'AI',collaborator_name:human?'Alex':'Nova',identity:human?'遠端真人協作者':'AI 協作者'};}
+const replyCache={};
+function chat(s,practice=false){const who=practice?{target_type:'AI',collaborator_name:'Nova',identity:'AI 協作者'}:target(s);const meta={scenario_id:s.id,scenario_version:s.scenario_version,family:s.family,presentation_order:practice?0:s.number,...who};return {type:jsPsychHtmlButtonResponse,choices:[],data:{stage:practice?'practice_response':'scenario_response',...meta,interface_type:'chat',typing_delay_ms:CONFIG.typingDelay},stimulus:`<section class="chat"><header class="header"><div class="avatar">${who.collaborator_name[0]}</div><div><strong>${who.collaborator_name}</strong><div class="muted">${who.identity}</div></div><span class="progress">${practice?'練習':`${s.number} / 12`}</span></header><div class="thread" id="thread"><div class="context"><strong>${esc(s.title)}</strong><p style="white-space:pre-wrap">${esc(s.context)}</p></div>${s.prior?`<div class="row you"><div class="message"><div class="label">你・先前的訊息</div><div class="bubble">${esc(s.prior)}</div></div></div>`:''}<div class="row"><div class="message"><div class="label">${who.collaborator_name}</div><div class="bubble" id="incoming" aria-live="polite">正在輸入……</div></div></div><div id="sent"></div></div><div class="composer"><form id="message-form"><div class="input-row"><textarea id="reply" maxlength="5000" disabled aria-label="輸入訊息" placeholder="等待協作者回覆……"></textarea><button type="submit" id="send" disabled>傳送</button></div></form><div class="hint" id="hint">Enter換行；按「傳送」送出訊息。</div><button id="complete" hidden>繼續</button></div></section>`,on_load:()=>{
+ const start=performance.now(),input=document.getElementById('reply'),send=document.getElementById('send'),thread=document.getElementById('thread');let shown,first=null,result=null,composing=false;
+ input.addEventListener('compositionstart',()=>composing=true);input.addEventListener('compositionend',()=>composing=false);
+ jsPsych.pluginAPI.setTimeout(()=>{document.getElementById('incoming').textContent=s.reply;shown=performance.now();input.disabled=false;input.placeholder='輸入訊息……';thread.scrollTop=thread.scrollHeight;},CONFIG.typingDelay);
+ input.oninput=()=>{if(first===null&&input.value.length)first=performance.now();send.disabled=!input.value.trim();};
+ document.getElementById('message-form').onsubmit=e=>{e.preventDefault();if(composing||result||shown===undefined||!input.value.trim())return;const now=performance.now();result={reply_text:input.value,rt:Math.round(now-start),response_rt_ms:Math.round(now-shown),first_input_latency_ms:first===null?null:Math.round(first-shown),composition_ms:first===null?null:Math.round(now-first),submitted_at:new Date().toISOString()};const row=document.createElement('div');row.className='row you';const bubble=document.createElement('div');bubble.className='bubble';bubble.textContent=result.reply_text;row.append(bubble);document.getElementById('sent').append(row);input.disabled=true;send.disabled=true;document.getElementById('complete').hidden=false;document.getElementById('hint').textContent='訊息已送出。按「繼續」完成此題紀錄。';thread.scrollTop=thread.scrollHeight;};
+ document.getElementById('complete').onclick=()=>{if(!result)return;document.getElementById('complete').disabled=true;replyCache[s.id]=result;jsPsych.finishTrial({...result,trial_duration_ms:Math.round(performance.now()-start),context_text:s.context,prior_message:s.prior,collaborator_message:s.reply});};
+}};}
+const timeline=[{type:jsPsychHtmlButtonResponse,stimulus:`<div class="card"><h1>數位協作情境測試</h1><p>這是12題預試版，測試情境是否清楚、自然及介面是否好操作。你會閱讀既有對話，寫下實際會傳送的訊息，並回答幾個簡短評分。沒有標準答案。</p><p>資料包含匿名編號、文字回答與作答時間，透過DataPipe保存至研究者的Google Drive。請勿填入姓名或私人資訊。你可以關閉頁面停止參與；已傳送的紀錄可能保留。</p><p>此版本供研究者與受邀預試者檢查，尚非正式研究定稿。</p></div>`,choices:['同意並開始','不參與'],data:{stage:'consent'},on_finish:d=>{if(d.response===1){jsPsych.abortExperiment('你已選擇不參與，可以關閉頁面。');}}},page('你可能遇到的協作者','<p><strong>Alex｜遠端真人協作者</strong>：情境設定中，透過線上方式協助工作的真人。</p><p><strong>Nova｜AI協作者</strong>：情境設定中，協助工作的AI工具。</p><p>每題都是獨立情境，請依背景資訊回覆當下的協作者。</p>')];
+const practice={id:'P00',number:0,family:'Practice',scenario_version:'practice-v1',title:'練習：簡報標題',context:'你正在準備一份關於遠距工作的簡短簡報，需要一個標題。請直接回覆協作者。',prior:'',reply:'我想到一個標題：\n〈Anywhere Office：遠距工作的未來〉'};
+timeline.push(chat(practice,true),page('練習完成','<p>接下來開始12個情境。每題先傳送訊息，再回答情境評分。</p>'));
+for(const s of SCENARIOS){const who=target(s),meta={scenario_id:s.id,presentation_order:s.number,scenario_version:s.scenario_version,family:s.family,...who};timeline.push(chat(s),form('剛才的情境',scale('comprehension','你覺得剛才這個情境有多容易理解？','非常難理解','非常容易理解')+scale('plausibility','這位協作者做出這樣的回應／行為，有多合理、像真實可能發生的事？','非常不合理','非常合理')+scale('friction','如果這件事真的發生，你會覺得有多煩／不舒服？','完全不會','非常強烈')+scale('consideration','剛才回覆時，你覺得自己需要在多大程度上顧慮這位協作者的感受、反應或處境？','完全不需要','非常需要'),'scenario_diagnostics',meta));if(s.number===6)timeline.push(page('已完成一半','<p>可以稍微休息，準備好再繼續。</p>'));}
+const textField=(name,label,required=false)=>`<p><label>${label}<textarea name="${name}" ${required?'required':''} maxlength="5000" style="width:100%;height:100px"></textarea></label></p>`;
+timeline.push(form('最後幾個問題',textField('suspected_purpose','你覺得這份研究主要想了解什麼？',true)+textField('unnatural','哪些情境不自然，或讓你不確定發生了什麼？請註明題號或內容。')+textField('interface_feedback','聊天畫面或操作有沒有需要改善的地方？'),'open_feedback'));
+const choice=(name,label,options)=>`<fieldset><legend>${label}</legend>${options.map((o,i)=>`<label style="display:block"><input type="radio" name="${name}" value="${i}" required> ${o}</label>`).join('')}</fieldset>`;
+timeline.push(form('協作者與使用經驗',textField('identity_pattern','你有沒有注意到Alex與Nova出現情境的規律或差異？')+textField('identity_effect','知道協作者是真人或AI，有沒有影響你的回覆方式？')+choice('alex_recall','Alex是：',['遠端真人協作者','AI協作者','不確定'])+choice('nova_recall','Nova是：',['遠端真人協作者','AI協作者','不確定'])+scale('alex_presence','你在多大程度上把Alex感覺成正在與你互動的對象，而不只是一個工具或設定？','完全沒有','非常強烈')+scale('nova_presence','你在多大程度上把Nova感覺成正在與你互動的對象，而不只是一個工具或設定？','完全沒有','非常強烈')+choice('ai_frequency','你平常使用對話式AI的頻率？',['從不使用','每月不到一次','每月幾次','每週幾次','每天','每天多次']),'identity_background'));
+timeline.push(page('關於這次測試','<p>所有協作者回覆都是預先設定的。本輪主要檢查情境在真人與AI身分下是否清楚、合理，以及不同互動的感受與回答。少量預試資料不會用來判定人對真人與AI是否真的不同。</p><p>按下完成後，請保留頁面並下載備份。</p>','完成','completion'));
+timeline[timeline.length-1].on_finish=d=>{d.completed=true;d.scenario_count=Object.keys(replyCache).filter(id=>id!=='P00').length;d.finished_at=new Date().toISOString();};
+jsPsych.run(timeline);
+</script></body></html>
